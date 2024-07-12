@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Get the HOME directory
+HOME_DIR=$HOME
+
+# Check if .ssh directory exists, if not, create it
+SSH_DIR="$HOME_DIR/.ssh"
+if [ ! -d "$SSH_DIR" ]; then
+    mkdir -p "$SSH_DIR"
+    if [ $? -ne 0 ]; then
+        echo "Failed to create .ssh directory"
+        exit 1
+    fi
+fi
+
+# Prompt for GitHub email
+read -p "Enter your GitHub email : " GITHUB_EMAIL
+
+# Generate SSH key
+ssh-keygen -t rsa -b 4096 -C "$GITHUB_EMAIL" -f "$SSH_DIR/id_rsa" -N ""
+if [ $? -ne 0 ]; 
+then
+    echo "Failed to generate SSH key"
+    exit 1
+fi
+
+# Start SSH agent
+eval "$(ssh-agent -s)"
+if [ $? -ne 0 ]; 
+then
+    echo "Failed to start SSH agent"
+    exit 1
+fi
+
+# Add SSH key to agent
+ssh-add "$SSH_DIR/id_rsa"
+if [ $? -ne 0 ]; 
+then
+    echo "Failed to add SSH key to agent"
+    exit 1
+fi
+
+# Copy public key to clipboard
+xclip -selection clipboard < "$SSH_DIR/id_rsa.pub"
+if [ $? -ne 0 ]; 
+then
+    echo "Failed to copy public key to clipboard"
+    exit 1
+fi
+
+echo "SSH key generated and public key copied to clipboard."
